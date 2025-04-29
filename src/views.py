@@ -8,6 +8,9 @@ import logging
 from pathlib import Path
 from pprint import pprint
 
+from dotenv import load_dotenv
+
+load_dotenv()
 from src.utils import read_transactions_from_excel
 
 logger = logging.getLogger(__name__)
@@ -181,34 +184,40 @@ def get_top_transactions(operations: list[dict]) -> list[dict]:
 
     return result
 
+def get_currency_rates(currencies: list[str]) -> list[dict]:
+    try:
+        api_key = os.getenv("API_KEY")
+        if not api_key:
+            logging.error("API ключ не найден в переменных окружения")
+            return []
 
-def get_currency_rates(currencies: list):
-    url = "https://api.currencyapi.com/v3/latest?apikey=cur_live_qHKbYCrpNsZ69CIGRL2pEVREk5s7o2afg4QkgFJB"
-    headers = {
-        "apikey": os.getenv('API_KEY')
-    }
-    response = requests.get(url, headers=headers, data={})
+        url = f"https://api.currencyapi.com/v3/latest?apikey={api_key}"
+        logging.info(f"Отправка запроса на: {url}")
+        response = requests.get(url)
+        result = response.json()
 
-    result = response.json()
-    print(result)
-    results = []
-    usd_to_rub = result['data']['RUB']['value']  # курс USD к RUB
+        data = result.get("data", {})
+        rub_value = data.get("RUB", {}).get("value")
 
-    for res in result:
-        print(res)
-        print()
-        print(currencies)
-        if res in currencies:
-            currency_to_rub = result['data'][res]['value']
-            print(currency_to_rub)
-    # for currency_code, currency_data in result['data'].items():
-    #     rate = currency_data.get('value')
-    #     if rate and rate != 0:
-    #         currency_to_rub = round(usd_to_rub / rate, 2)  # сколько 1 единица валюты стоит в рублях
-    #         results.append({"currency": currency_code, "rate": currency_to_rub})
-    # return results
+        if not rub_value:
+            return []
 
-#'EUR': {'code': 'EUR', 'value': 0.8764201365}
+        results = []
+        for code in currencies:
+            currency_data = data.get(code)
+            if currency_data:
+                currency_value = currency_data.get("value")
+                if currency_value and currency_value != 0:
+                    rate_to_rub = round(rub_value / currency_value, 2)
+                    results.append({"currency": code, "rate": rate_to_rub})
+
+        return results
+    except Exception as e:
+        return []
+
+
+
+
 
 # tp = read_transactions_from_excel("../data/operations.xlsx")
 pprint(get_currency_rates(["EUR"]))
