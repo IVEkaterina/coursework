@@ -28,7 +28,6 @@ def greetings(actual_time: str) -> str:
     """
     try:
 
-
         logger.info("Из переданной строки с датой создаем DataFrame")
 
         date_obj = datetime.strptime(actual_time, "%H:%M:%S")
@@ -63,6 +62,7 @@ def greetings(actual_time: str) -> str:
         logger.error("Передано неверное время")
 
         raise ValueError("Неверный формат времени")
+
 
 def sort_by_date(operations: list[dict], input_date: str) -> str | list[dict]:
     """
@@ -99,6 +99,7 @@ def sort_by_date(operations: list[dict], input_date: str) -> str | list[dict]:
         print("Введена неверная дата. Введите дату в формате ДД.ММ.ГГГГ")
 
     return result
+
 
 def get_card_info(operations_list: list[dict]) -> list[dict]:
     """
@@ -146,10 +147,12 @@ def get_card_info(operations_list: list[dict]) -> list[dict]:
 
     return result
 
+
 def load_user_settings(filepath='user_settings.json'):
     """Функция для загрузки пользовательских настроек. На вход принамается путь к файлу(по умолчанию 'user_settings.json')"""
     with open(filepath, 'r', encoding='utf-8') as file:
         return json.load(file)
+
 
 def get_top_transactions(operations: list[dict]) -> list[dict]:
     """
@@ -184,9 +187,11 @@ def get_top_transactions(operations: list[dict]) -> list[dict]:
 
     return result
 
+
 def get_currency_rates(currencies: list[str]) -> list[dict]:
+    """jguy6"""
     try:
-        api_key = os.getenv("API_KEY")
+        api_key = os.getenv("CURRENCY_API_KEY")
         if not api_key:
             logging.error("API ключ не найден в переменных окружения")
             return []
@@ -216,8 +221,72 @@ def get_currency_rates(currencies: list[str]) -> list[dict]:
         return []
 
 
+def get_stock_prices(stocks: list[dict]) -> list[dict]:
+    """kjghiyg"""
+    api_key = os.getenv("STOCK_API_KEY")
+    url = "https://finnhub.io/api/v1/quote"
+    headers = {
+        "X-Finnhub-Token": api_key
+    }
+
+    result = []
+    for stock in stocks:
+        response = requests.get(url, params={"symbol": stock}, headers=headers)
+        data = response.json()
+        price = data.get("c")
+        if price:
+            result.append({
+                "stock": stock,
+                "price": round(price, 2)
+            })
+    return result
 
 
+def main_func_for_views(datetime_str: str) -> dict:
+    """
+        Главная функция. Принимает строку с датой и временем в формате "YYYY-MM-DD HH:MM:SS".
 
-# tp = read_transactions_from_excel("../data/operations.xlsx")
-pprint(get_currency_rates(["EUR"]))
+        Возвращает JSON-объект в формате:
+        {"greeting": приветствие,
+            "cards": [{
+              "last_digits": последние 4 цифры карты,
+              "total_spent": общая сумма расходов,
+              "cashback": кешбэк (1 рубль на каждые 100 рублей)
+            }],
+            "top_transactions": [{
+              "date": дата операции,
+              "amount": сумма операции,
+              "category": категория операции,
+              "description": описание операции
+            }],
+            "currency_rates": [{
+              "currency": валюта,
+              "rate": курс валюты в рублях
+            }],
+            "stock_prices": [{
+              "stock": акция,
+              "price": цена акции
+            }]
+        }
+        """
+    try:
+        dt = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S")
+        # Здесь будут вызовы вспомогательных функций, например:
+        # weekday = get_weekday(dt)
+        # time_period = get_time_period(dt)
+        # и т.д.
+
+        response = {
+            "status": "success",
+            "input": datetime_str,
+            "result": {
+                # заглушка — тут будут реальные данные
+            }
+        }
+    except ValueError:
+        response = {
+            "status": "error",
+            "message": "Неверный формат даты. Используйте YYYY-MM-DD HH:MM:SS"
+        }
+
+    return json.dumps(response, ensure_ascii=False, indent=2)
