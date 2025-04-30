@@ -189,7 +189,7 @@ def get_top_transactions(operations: list[dict]) -> list[dict]:
 
 
 def get_currency_rates(currencies: list[str]) -> list[dict]:
-    """jguy6"""
+    """Функция, которая принемает на вход список валют и возвращает курс этих валют"""
     try:
         api_key = os.getenv("CURRENCY_API_KEY")
         if not api_key:
@@ -218,11 +218,12 @@ def get_currency_rates(currencies: list[str]) -> list[dict]:
 
         return results
     except Exception as e:
+        logger.error(f"ihhuh")
         return []
 
 
-def get_stock_prices(stocks: list[dict]) -> list[dict]:
-    """kjghiyg"""
+def get_stock_prices(stocks: list[str]) -> list[dict]:
+    """Функция, которая принемает на вход список названий акций из S&P500 и возвращает каждой ее стоимость"""
     api_key = os.getenv("STOCK_API_KEY")
     url = "https://finnhub.io/api/v1/quote"
     headers = {
