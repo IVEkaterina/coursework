@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-
+from pathlib import Path
 from dotenv import load_dotenv
 
 from src.utils import (
@@ -16,10 +16,17 @@ from src.utils import (
 
 load_dotenv()
 
+BASE_DIR = Path(__file__).resolve().parents[1]
+
+log_file_path = BASE_DIR / 'logs' / 'views.log'
+
+log_file_path.parent.mkdir(parents=True, exist_ok=True)
+
 logger = logging.getLogger(__name__)
-file_handler = logging.FileHandler('../logs/views.log')
+file_handler = logging.FileHandler(log_file_path, encoding='utf-8')
 file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(file_formatter)
+
 logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 

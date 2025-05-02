@@ -1,11 +1,20 @@
 import re
 import logging
+from pathlib import Path
 
+from src.utils import read_transactions_from_excel
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+
+log_file_path = BASE_DIR / 'logs' / 'services.log'
+
+log_file_path.parent.mkdir(parents=True, exist_ok=True)
 
 logger = logging.getLogger(__name__)
-file_handler = logging.FileHandler('../logs/services.log')
+file_handler = logging.FileHandler(log_file_path, encoding='utf-8')
 file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(file_formatter)
+
 logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
@@ -23,7 +32,7 @@ def get_sort_bank_operations(operations: list[dict], search_string: str) -> list
             description = str(oper.get("Описание", "") or "")
             category = str(oper.get("Категория", "") or "")
 
-            if pattern.search(description) or pattern.search(category):
+            if description and pattern.search(description) or category and pattern.search(category):
                 logger.info(f"Найдено совпадение для операции: {oper}")
                 result.append(oper)
         if  result == []:

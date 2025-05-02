@@ -2,13 +2,22 @@ import logging
 from functools import wraps
 
 import pandas as pd
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+
+log_file_path = BASE_DIR / 'logs' / 'decorators.log'
+
+log_file_path.parent.mkdir(parents=True, exist_ok=True)
 
 logger = logging.getLogger(__name__)
-file_handler = logging.FileHandler('../logs/views.log')
+file_handler = logging.FileHandler(log_file_path, encoding='utf-8')
 file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(file_formatter)
+
 logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
+
 
 def decorator_record_file(file_name):
     """

@@ -1,11 +1,193 @@
 import pytest
+import pandas as pd
+import json
+from unittest.mock import patch, MagicMock
 from datetime import datetime
 from src.utils import (
     greetings,
     sort_by_date,
     get_card_info,
-    get_top_transactions
+    get_top_transactions, read_transactions_from_excel, load_user_settings, get_currency_rates, get_stock_prices
 )
+
+def test_read_transactions_success(tmp_path):
+    # 1. Создаем тестовый DataFrame
+    df = pd.DataFrame([
+        {"amount": 100, "category": "Food"},
+        {"amount": 200, "category": "Transport"},
+    ])
+
+    # 2. Сохраняем во временный .xlsx файл
+    test_file = tmp_path / "test.xlsx"
+    df.to_excel(test_file, index=False)
+
+    # 3. Вызываем функцию
+    result = read_transactions_from_excel(str(test_file))
+
+    # 4. Проверяем результат
+    assert isinstance(result, list)
+    assert result == [
+        {"amount": 100, "category": "Food"},
+        {"amount": 200, "category": "Transport"}
+    ]
+
+def test_read_transactions_file_not_found():
+    result = read_transactions_from_excel("non_existing_file.xlsx")
+    assert result == []
+
+def test_read_transactions_invalid_file(tmp_path):
+    # Создаем просто текстовый файл, не Excel
+    bad_file = tmp_path / "not_excel.txt"
+    bad_file.write_text("Это не Excel")
+
+    result = read_transactions_from_excel(str(bad_file))
+    assert result == []
+
+def test_load_user_settings(tmp_path):
+    # 1. Создаем тестовые данные
+    test_data = {"theme": "dark", "language": "ru"}
+
+    # 2. Создаем временный JSON-файл
+    test_file = tmp_path / "user_settings.json"
+    test_file.write_text(json.dumps(test_data, ensure_ascii=False), encoding='utf-8')
+
+    # 3. Вызываем функцию
+    result = load_user_settings(str(test_file))
+
+    # 4. Проверяем результат
+    assert isinstance(result, dict)
+    assert result == test_data
+
+
+def test_load_user_settings_file_not_found():
+    with pytest.raises(FileNotFoundError):
+        load_user_settings("non_existing_file.json")
+
+# Тест успешного получения курса
+@patch("src.utils.requests.get")
+@patch("src.utils.os.getenv", return_value="fake_api_key")
+def test_get_currency_rates_success(mock_getenv, mock_requests_get):
+    mock_response = MagicMock()
+    mock_response.json.return_value = {
+        "data": {
+            "RUB": {"value": 1},
+            "USD": {"value": 0.01},
+            "EUR": {"value": 0.012}
+        }
+    }
+    mock_requests_get.return_value = mock_response
+
+    result = get_currency_rates(["USD", "EUR"])
+
+    assert result == [
+        {"currency": "USD", "rate": 100.0},
+        {"currency": "EUR", "rate": 83.33}
+    ]
+
+# Тест: отсутствует API-ключ
+@patch("src.utils.os.getenv", return_value=None)
+def test_get_currency_rates_no_api_key(mock_getenv):
+    result = get_currency_rates(["USD"])
+    assert result == []
+
+# Тест: RUB отсутствует в ответе API
+@patch("src.utils.requests.get")
+@patch("src.utils.os.getenv", return_value="fake_api_key")
+def test_get_currency_rates_no_rub(mock_getenv, mock_requests_get):
+    mock_response = MagicMock()
+    mock_response.json.return_value = {
+        "data": {
+            "USD": {"value": 0.01}
+        }
+    }
+    mock_requests_get.return_value = mock_response
+
+    result = get_currency_rates(["USD"])
+    assert result == []
+
+# Тест: курс валюты равен 0
+@patch("src.utils.requests.get")
+@patch("src.utils.os.getenv", return_value="fake_api_key")
+def test_get_currency_rates_zero_value(mock_getenv, mock_requests_get):
+    mock_response = MagicMock()
+    mock_response.json.return_value = {
+        "data": {
+            "RUB": {"value": 1},
+            "USD": {"value": 0}
+        }
+    }
+    mock_requests_get.return_value = mock_response
+
+    result = get_currency_rates(["USD"])
+    assert result == []
+
+# Тест: валюта отсутствует в ответе API
+@patch("src.utils.requests.get")
+@patch("src.utils.os.getenv", return_value="fake_api_key")
+def test_get_currency_rates_missing_currency(mock_getenv, mock_requests_get):
+    mock_response = MagicMock()
+    mock_response.json.return_value = {
+        "data": {
+            "RUB": {"value": 1}
+            # USD отсутствует
+        }
+    }
+    mock_requests_get.return_value = mock_response
+
+    result = get_currency_rates(["USD"])
+    assert result == []
+
+# Тест: происходит исключение
+@patch("src.utils.requests.get", side_effect=Exception("Ошибка соединения"))
+@patch("src.utils.os.getenv", return_value="fake_api_key")
+def test_get_currency_rates_exception(mock_getenv, mock_requests_get):
+    result = get_currency_rates(["USD"])
+    assert result == []
+
+
+# Успешный запрос с двумя акциями
+@patch("src.utils.requests.get")
+@patch("src.utils.os.getenv", return_value="fake_stock_key")
+def test_get_stock_prices_success(mock_getenv, mock_requests_get):
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"c": 145.75}
+    mock_requests_get.return_value = mock_response
+
+    result = get_stock_prices(["AAPL", "MSFT"])
+
+    assert result == [
+        {"stock": "AAPL", "price": 145.75},
+        {"stock": "MSFT", "price": 145.75}
+    ]
+
+# Нет API-ключа
+@patch("src.utils.os.getenv", return_value=None)
+def test_get_stock_prices_no_api_key(mock_getenv):
+    result = get_stock_prices(["AAPL"])
+    assert result == []
+
+# Отсутствует цена ("c" нет в ответе API)
+@patch("src.utils.requests.get")
+@patch("src.utils.os.getenv", return_value="fake_stock_key")
+def test_get_stock_prices_missing_price(mock_getenv, mock_requests_get):
+    mock_response = MagicMock()
+    mock_response.json.return_value = {}  # нет "c"
+    mock_requests_get.return_value = mock_response
+
+    result = get_stock_prices(["AAPL"])
+    assert result == []  # пусто, так как цена не найдена
+
+# Цена равна 0 (по логике функции — считается ценой и включается)
+@patch("src.utils.requests.get")
+@patch("src.utils.os.getenv", return_value="fake_stock_key")
+def test_get_stock_prices_zero_price(mock_getenv, mock_requests_get):
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"c": 0}
+    mock_requests_get.return_value = mock_response
+
+    result = get_stock_prices(["AAPL"])
+    assert result == []  # 0 не считается ценой — пропускается
+
 
 
 @pytest.mark.parametrize("input_time,expected_greeting", [

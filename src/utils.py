@@ -2,7 +2,7 @@ import json
 import os
 import re
 from typing import Any, cast
-
+from pathlib import Path
 import requests
 import pandas as pd
 from datetime import datetime, time, timedelta
@@ -12,10 +12,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+BASE_DIR = Path(__file__).resolve().parents[1]
+
+log_file_path = BASE_DIR / 'logs' / 'utils.log'
+
+log_file_path.parent.mkdir(parents=True, exist_ok=True)
+
 logger = logging.getLogger(__name__)
-file_handler = logging.FileHandler('../logs/views.log')
+file_handler = logging.FileHandler(log_file_path, encoding='utf-8')
 file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(file_formatter)
+
 logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
