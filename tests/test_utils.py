@@ -1,13 +1,20 @@
-import pytest
-import pandas as pd
 import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pandas as pd
+import pytest
+
 from src.utils import (
-    greetings,
-    sort_by_date,
     get_card_info,
-    get_top_transactions, read_transactions_from_excel, load_user_settings, get_currency_rates, get_stock_prices
+    get_currency_rates,
+    get_stock_prices,
+    get_top_transactions,
+    greetings,
+    load_user_settings,
+    read_transactions_from_excel,
+    sort_by_date,
 )
+
 
 def test_read_transactions_success(tmp_path):
     df = pd.DataFrame([
@@ -26,9 +33,11 @@ def test_read_transactions_success(tmp_path):
         {"amount": 200, "category": "Transport"}
     ]
 
+
 def test_read_transactions_file_not_found():
     result = read_transactions_from_excel("non_existing_file.xlsx")
     assert result == []
+
 
 def test_read_transactions_invalid_file(tmp_path):
     bad_file = tmp_path / "not_excel.txt"
@@ -36,6 +45,7 @@ def test_read_transactions_invalid_file(tmp_path):
 
     result = read_transactions_from_excel(str(bad_file))
     assert result == []
+
 
 def test_load_user_settings(tmp_path):
     test_data = {"theme": "dark", "language": "ru"}
@@ -52,6 +62,7 @@ def test_load_user_settings(tmp_path):
 def test_load_user_settings_file_not_found():
     with pytest.raises(FileNotFoundError):
         load_user_settings("non_existing_file.json")
+
 
 @patch("src.utils.requests.get")
 @patch("src.utils.os.getenv", return_value="fake_api_key")
@@ -74,11 +85,13 @@ def test_get_currency_rates_success(mock_getenv, mock_requests_get):
         {"currency": "EUR", "rate": 83.33}
     ]
 
+
 @patch("src.utils.os.getenv", return_value=None)
 def test_get_currency_rates_no_api_key(mock_getenv):
     """отсутствует API-ключ"""
     result = get_currency_rates(["USD"])
     assert result == []
+
 
 @patch("src.utils.requests.get")
 @patch("src.utils.os.getenv", return_value="fake_api_key")
@@ -94,6 +107,7 @@ def test_get_currency_rates_no_rub(mock_getenv, mock_requests_get):
 
     result = get_currency_rates(["USD"])
     assert result == []
+
 
 @patch("src.utils.requests.get")
 @patch("src.utils.os.getenv", return_value="fake_api_key")
@@ -111,6 +125,7 @@ def test_get_currency_rates_zero_value(mock_getenv, mock_requests_get):
     result = get_currency_rates(["USD"])
     assert result == []
 
+
 @patch("src.utils.requests.get")
 @patch("src.utils.os.getenv", return_value="fake_api_key")
 def test_get_currency_rates_missing_currency(mock_getenv, mock_requests_get):
@@ -125,6 +140,7 @@ def test_get_currency_rates_missing_currency(mock_getenv, mock_requests_get):
 
     result = get_currency_rates(["USD"])
     assert result == []
+
 
 @patch("src.utils.requests.get", side_effect=Exception("Ошибка соединения"))
 @patch("src.utils.os.getenv", return_value="fake_api_key")
@@ -149,11 +165,13 @@ def test_get_stock_prices_success(mock_getenv, mock_requests_get):
         {"stock": "MSFT", "price": 145.75}
     ]
 
+
 @patch("src.utils.os.getenv", return_value=None)
 def test_get_stock_prices_no_api_key(mock_getenv):
     """Нет API-ключа"""
     result = get_stock_prices(["AAPL"])
     assert result == []
+
 
 @patch("src.utils.requests.get")
 @patch("src.utils.os.getenv", return_value="fake_stock_key")
@@ -166,6 +184,7 @@ def test_get_stock_prices_missing_price(mock_getenv, mock_requests_get):
     result = get_stock_prices(["AAPL"])
     assert result == []  # пусто, так как цена не найдена
 
+
 @patch("src.utils.requests.get")
 @patch("src.utils.os.getenv", return_value="fake_stock_key")
 def test_get_stock_prices_zero_price(mock_getenv, mock_requests_get):
@@ -176,7 +195,6 @@ def test_get_stock_prices_zero_price(mock_getenv, mock_requests_get):
 
     result = get_stock_prices(["AAPL"])
     assert result == []
-
 
 
 @pytest.mark.parametrize("input_time,expected_greeting", [

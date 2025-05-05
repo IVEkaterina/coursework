@@ -1,12 +1,14 @@
 import json
+
 import pandas as pd
 
-
 from src.decorators import decorator_record_file
+
 
 @decorator_record_file("test_output.json")
 def test_func_returns_dataframe():
     return pd.DataFrame([{"name": "Alice", "age": 30}])
+
 
 def test_decorator_saves_dataframe(tmp_path):
     file_path = tmp_path / "test_output.json"

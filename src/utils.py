@@ -1,13 +1,13 @@
 import json
+import logging
 import os
 import re
-from typing import Any, cast
-from pathlib import Path
-import requests
-import pandas as pd
 from datetime import datetime, time, timedelta
-import logging
+from pathlib import Path
+from typing import Any, cast
 
+import pandas as pd
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -26,6 +26,7 @@ logger.propagate = False
 
 logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
+
 
 def read_transactions_from_excel(file_path: str) -> list[dict]:
     """Считывает XLSX-файл с финансовыми операциями и возвращает список словарей.

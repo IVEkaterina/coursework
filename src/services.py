@@ -1,5 +1,5 @@
-import re
 import logging
+import re
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -17,9 +17,11 @@ logger.propagate = False
 logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)
 
+
 def get_sort_bank_operations(operations: list[dict], search_string: str) -> list[dict]:
     """Функция, которая принимает список словарей с данными о банковских операциях и строку поиска,
-    а потом фильтрует операции по строке поиска в описании или категории. И возвращает список словарей операций, где это слово совпало"""
+    а потом фильтрует операции по строке поиска в описании или категории. И возвращает список словарей операций,
+     где это слово совпало"""
     logger.info(f"Получена строка:'{search_string}', для фильлтрации")
     try:
         logger.info("Успешно началась обработка операций")
@@ -34,7 +36,7 @@ def get_sort_bank_operations(operations: list[dict], search_string: str) -> list
             if description and pattern.search(description) or category and pattern.search(category):
                 logger.info(f"Найдено совпадение для операции: {oper}")
                 result.append(oper)
-        if  result == []:
+        if result == []:
             logger.warning(f"Не найдено совпадений для строки поиска: '{search_string}'")
 
         return result

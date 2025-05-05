@@ -1,4 +1,5 @@
 from unittest.mock import patch
+
 from src.views import main_func_for_views
 
 

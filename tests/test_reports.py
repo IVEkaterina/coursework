@@ -35,6 +35,7 @@ TEST_TRANSACTIONS = pd.DataFrame([
     },
 ])
 
+
 def test_spending_by_category_with_date():
     """
     Проверка выборки по дате и категории: берём только последние 3 месяца от 01.04.2024

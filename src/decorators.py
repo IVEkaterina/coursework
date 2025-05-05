@@ -1,8 +1,8 @@
 import logging
 from functools import wraps
+from pathlib import Path
 
 import pandas as pd
-from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 
