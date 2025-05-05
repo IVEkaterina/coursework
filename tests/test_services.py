@@ -1,10 +1,9 @@
-import pytest
 from unittest.mock import patch
 from src.services import get_sort_bank_operations
 
 
-# Тест: Операции, соответствующие строке поиска
 def test_get_sort_bank_operations_match():
+    """Операции, соответствующие строке поиска"""
     operations = [
         {"Описание": "Оплата счета", "Категория": "ЖКХ"},
         {"Описание": "Перевод на карту", "Категория": "Трансакции"},
@@ -19,8 +18,8 @@ def test_get_sort_bank_operations_match():
     assert result[0]["Категория"] == "ЖКХ"
 
 
-# Тест: Нет совпадений для строки поиска
 def test_get_sort_bank_operations_no_match():
+    """Нет совпадений для строки поиска"""
     operations = [
         {"Описание": "Оплата счета", "Категория": "ЖКХ"},
         {"Описание": "Перевод на карту", "Категория": "Трансакции"},
@@ -33,8 +32,8 @@ def test_get_sort_bank_operations_no_match():
     assert len(result) == 0
 
 
-# Тест: Строки поиска не чувствительны к регистру
 def test_get_sort_bank_operations_case_insensitive():
+    """Строки поиска не чувствительны к регистру"""
     operations = [
         {"Описание": "Оплата счета", "Категория": "ЖКХ"},
         {"Описание": "Перевод на карту", "Категория": "Трансакции"},
@@ -48,8 +47,8 @@ def test_get_sort_bank_operations_case_insensitive():
     assert result[0]["Описание"] == "Оплата счета"
 
 
-# Тест: Операции без описания или категории
 def test_get_sort_bank_operations_empty_description_or_category():
+    """Операции без описания или категории"""
     operations = [
         {"Описание": "", "Категория": "ЖКХ"},
         {"Описание": "Перевод на карту", "Категория": ""},
@@ -63,8 +62,8 @@ def test_get_sort_bank_operations_empty_description_or_category():
     assert result[0]["Описание"] == "Перевод на карту"
 
 
-# Тест: Пустой список операций
 def test_get_sort_bank_operations_empty_operations():
+    """Пустой список операций"""
     operations = []
     search_string = "оплата"
 
@@ -73,11 +72,8 @@ def test_get_sort_bank_operations_empty_operations():
     assert len(result) == 0
 
 
-# Тест: Ошибка при обработке данных (например, некорректный формат операций)
-
-
-# Тест: Когда не найдено совпадений, выводится предупреждение в логах
 def test_get_sort_bank_operations_warning_when_no_match():
+    """Когда не найдено совпадений, выводится предупреждение в логах"""
     operations = [
         {"Описание": "Оплата счета", "Категория": "ЖКХ"},
         {"Описание": "Перевод на карту", "Категория": "Трансакции"}
