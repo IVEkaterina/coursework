@@ -214,6 +214,8 @@ def get_top_transactions(operations: list[dict]) -> list[dict]:
 
 
 def load_user_settings(filepath: str = '../user_settings.json') -> dict[Any, Any]:
+    """Функция, которая загружает настройки пользователя из указанного JSON-файла, принимая Путь к файлу и
+    возвращая словарь, содержащий данные, считанные из JSON-файла"""
     with open(filepath, 'r', encoding='utf-8') as file:
         return cast(dict[Any, Any], json.load(file))
 

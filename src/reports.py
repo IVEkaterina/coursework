@@ -40,7 +40,6 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
             stop_date = datetime.now()
         else:
             stop_date = datetime.strptime(date, "%d.%m.%Y")
-        print(stop_date)
         start_date = stop_date - datetime.timedelta(days=90)
         columns = ['Дата платежа', 'Сумма операции', 'Категория']
         logger.info('Проверяем наличие необходимых нам колонок')
@@ -63,5 +62,4 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
         return pd.DataFrame({})
 
 tr = read_transactions_from_excel("../data/operations.xlsx")
-pprint(tr)
-#print(spending_by_category(tr, "переводы", ))
+pprint(spending_by_category(tr, "переводы", "19.06.2019"))
